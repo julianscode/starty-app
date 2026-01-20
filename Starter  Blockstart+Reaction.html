@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Starter">
+    <title>Starter: Blockstart+Reaction</title>
+    <link rel="manifest" href="data:application/json,{\"name\":\"Starter: Blockstart+Reaction\",\"short_name\":\"Starter\",\"icons\":[{\"src\":\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect fill='%2332a8c2' width='192' height='192'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-size='100' font-weight='bold' fill='white' font-family='system-ui'%3ES%3C/text%3E%3C/svg%3E\",\"sizes\":\"192x192\",\"type\":\"image/svg+xml\",\"purpose\":\"any\"}],\"theme_color\":\"#0f172a\",\"background_color\":\"#0f172a\",\"display\":\"standalone\",\"start_url\":\"/\",\"scope\":\"/\"}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+            background-color: #0f172a;
+            color: #f1f5f9;
+            overflow: hidden;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: stretch;
+            padding: 0;
+            padding-top: max(16px, env(safe-area-inset-top));
+            padding-bottom: max(16px, env(safe-area-inset-bottom));
+            padding-left: max(16px, env(safe-area-inset-left));
+            padding-right: max(16px, env(safe-area-inset-right));
+        }
+
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 0;
+        }
+
+        /* ===== STATUS & MAIN AREA ===== */
+        .main-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            gap: 32px;
+            padding: 20px 0;
+            min-height: 0;
+        }
+
+        .status-text {
+            font-size: 48px;
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            color: #f1f5f9;
+            margin: 0;
+        }
+
+        .status-text.accent {
+            color: #38bdf8;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 200ms ease-out;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        .btn-primary {
+            background-color: #32a8c2;
+            color: #0f172a;
+            min-width: 120px;
+        }
+
+        .btn-primary:active:not(:disabled) {
+            background-color: #2a98b5;
+            transform: scale(0.98);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background-color: #1e293b;
+            color: #cbd5e1;
+            border: 1px solid #334155;
+        }
+
+        .btn-secondary:active:not(:disabled) {
+            background-color: #334155;
+            transform: scale(0.98);
+        }
+
+        /* ===== RESULT DISPLAY ===== */
+        .result-area {
+            display: none;
+            text-align: center;
+            gap: 24px;
+            flex-direction: column;
+        }
+
+        .result-area.visible {
+            display: flex;
+        }
+
+        .result-time {
+            font-size: 64px;
+            font-weight: 700;
+            color: #38bdf8;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .result-label {
+            font-size: 16px;
+            color: #cbd5e1;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* ===== HISTORY ===== */
+        .history-container {
+            margin-top: 20px;
+            padding: 16px;
+            background-color: #1e293b;
+            border-radius: 12px;
+            max-height: 140px;
+            overflow-y: auto;
+        }
+
+        .history-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 12px;
+        }
+
+        .history-list {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
+
+        .history-item {
+            padding: 8px 12px;
+            background-color: #0f172a;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #cbd5e1;
+            font-variant-numeric: tabular-nums;
+            border: 1px solid #334155;
+        }
+
+        .history-item.pb {
+            background-color: rgba(56, 189, 248, 0.1);
+            border-color: #38bdf8;
+            color: #38bdf8;
+            font-weight: 600;
+        }
+
+        .reset-history-btn {
+            margin-top: 12px;
+            width: 100%;
+            padding: 8px;
+            background-color: #334155;
+            color: #cbd5e1;
+            border: none;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background-color 150ms ease-out;
+        }
+
+        .reset-history-btn:active {
+            background-color: #475569;
+        }
+
+        /* ===== SETTINGS ===== */
+        .settings-panel {
+            margin-top: 20px;
+            padding: 16px;
+            background-color: #1e293b;
+            border-radius: 12px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 300ms ease-out;
+        }
+
+        .settings-panel.open {
+            max-height: 600px;
+        }
+
+        .settings-toggle {
+            width: 100%;
+            padding: 12px 16px;
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: #cbd5e1;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0;
+            transition: all 150ms ease-out;
+        }
+
+        .settings-toggle:active {
+            background-color: #1e293b;
+        }
+
+        .settings-toggle.open {
+            border-bottom: 1px solid #334155;
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        .settings-content {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .setting-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #cbd5e1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .setting-value {
+            font-size: 13px;
+            color: #38bdf8;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .range-input {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: linear-gradient(to right, #38bdf8 0%, #38bdf8 var(--range-percentage), #334155 var(--range-percentage), #334155 100%);
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .range-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background-color: #38bdf8;
+            cursor: pointer;
+            transition: all 150ms ease-out;
+            border: 2px solid #0f172a;
+        }
+
+        .range-input::-webkit-slider-thumb:active {
+            transform: scale(1.3);
+        }
+
+        .range-input::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background-color: #38bdf8;
+            cursor: pointer;
+            border: 2px solid #0f172a;
+            transition: all 150ms ease-out;
+        }
+
+        .range-input::-moz-range-thumb:active {
+            transform: scale(1.3);
+        }
+
+        .range-pair-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .range-input-pair {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .range-input-pair input {
+            width: 60px;
+            padding: 6px 8px;
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            color: #38bdf8;
+            font-size: 13px;
+            text-align: center;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .range-input-pair input:focus {
+            outline: none;
+            border-color: #38bdf8;
+            background-color: #1e293b;
+        }
+
+        .separator {
+            height: 1px;
+            background-color: #334155;
+        }
+
+        .toggle-option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+        }
+
+        .toggle-option label {
+            font-size: 14px;
+            color: #cbd5e1;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 26px;
+            background-color: #334155;
+            border-radius: 13px;
+            cursor: pointer;
+            transition: background-color 200ms ease-out;
+        }
+
+        .toggle-switch.active {
+            background-color: #32a8c2;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            background-color: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: left 200ms ease-out;
+        }
+
+        .toggle-switch.active::after {
+            left: 20px;
+        }
+
+        .sensor-test-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #32a8c2;
+            color: #0f172a;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 150ms ease-out;
+        }
+
+        .sensor-test-btn:active:not(:disabled) {
+            background-color: #2a98b5;
+            transform: scale(0.98);
+        }
+
+        .sensor-test-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .sensor-bar-container {
+            margin-top: 12px;
+        }
+
+        .sensor-bar-label {
+            font-size: 12px;
+            color: #cbd5e1;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .sensor-bar {
+            width: 100%;
+            height: 32px;
+            background-color: #0f172a;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid #334155;
+            position: relative;
+        }
+
+        .sensor-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #38bdf8, #f59e0b, #ef4444);
+            width: 0%;
+            transition: width 50ms linear;
+        }
+
+        .sensor-bar-threshold {
+            position: absolute;
+            width: 2px;
+            height: 100%;
+            background-color: rgba(239, 68, 68, 0.6);
+            top: 0;
+        }
+
+        .sensor-test-info {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 8px;
+        }
+
+        .permission-banner {
+            padding: 16px;
+            background-color: rgba(239, 68, 68, 0.1);
+            border: 1px solid #ef4444;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .permission-banner.visible {
+            display: block;
+        }
+
+        .permission-banner-text {
+            font-size: 13px;
+            color: #fca5a5;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .permission-btn {
+            width: 100%;
+            padding: 10px;
+            background-color: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background-color 150ms ease-out;
+        }
+
+        .permission-btn:active {
+            background-color: #dc2626;
+        }
+
+        .fallback-message {
+            font-size: 12px;
+            color: #94a3b8;
+            background-color: rgba(139, 92, 246, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            margin-top: 12px;
+            display: none;
+        }
+
+        .fallback-message.visible {
+            display: block;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 480px) {
+            body {
+                padding-top: max(12px, env(safe-area-inset-top));
+                padding-bottom: max(12px, env(safe-area-inset-bottom));
+                padding-left: max(12px, env(safe-area-inset-left));
+                padding-right: max(12px, env(safe-area-inset-right));
+            }
+
+            .status-text {
+                font-size: 36px;
+            }
+
+            .result-time {
+                font-size: 48px;
+            }
+
+            .btn {
+                padding: 14px 28px;
+                font-size: 16px;
+            }
+
+            .history-list {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Permission Banner -->
+        <div class="permission-banner" id="permissionBanner">
+            <div class="permission-banner-text">
+                Diese App benötigt Zugriff auf die Bewegungssensoren deines Geräts für genaue Reaktionszzeitmessung.
+            </div>
+            <button class="permission-btn" id="permissionBtn">Sensorzugriff erlauben</button>
+        </div>
+
+        <!-- Main Area -->
+        <div class="main-area">
+            <h1 class="status-text" id="statusText">Bereit</h1>
+
+            <!-- Result Display -->
+            <div class="result-area" id="resultArea">
+                <div class="result-label">Reaktionszeit</div>
+                <div class="result-time" id="resultTime">0 ms</div>
+                <div class="history-container">
+                    <div class="history-title">Letzte Versuche</div>
+                    <div class="history-list" id="historyList"></div>
+                    <button class="reset-history-btn" id="resetHistoryBtn">Zurücksetzen</button>
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="button-container">
+                <button class="btn btn-primary" id="mainBtn">Start</button>
+                <button class="btn btn-secondary" id="cancelBtn" style="display: none;">Abbrechen</button>
+            </div>
+        </div>
+
+        <!-- Settings Panel -->
+        <div>
+            <button class="settings-toggle" id="settingsToggle">
+                Einstellungen
+                <span id="toggleArrow">▼</span>
+            </button>
+            <div class="settings-panel" id="settingsPanel">
+                <div class="settings-content">
+                    <!-- Random Delay Range -->
+                    <div class="setting-group">
+                        <div class="setting-label">
+                            <span>Zufallszeit (s)</span>
+                            <span class="setting-value" id="delayRangeDisplay">1.0 - 3.0 s</span>
+                        </div>
+                        <div class="range-pair-container">
+                            <div>
+                                <input type="number" id="minDelayInput" min="0.1" max="10" step="0.1" value="1.0" placeholder="Min">
+                            </div>
+                            <div>
+                                <input type="number" id="maxDelayInput" min="0.1" max="10" step="0.1" value="3.0" placeholder="Max">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="separator"></div>
+
+                    <!-- Preparation Time -->
+                    <div class="setting-group">
+                        <div class="setting-label">
+                            <span>Vorbereitungszeit (s)</span>
+                            <span class="setting-value" id="prepTimeDisplay">10.0 s</span>
+                        </div>
+                        <input type="range" id="prepTimeSlider" min="0" max="30" step="0.1" value="10" class="range-input">
+                    </div>
+
+                    <div class="separator"></div>
+
+                    <!-- Sound Toggle -->
+                    <div class="setting-group">
+                        <div class="toggle-option">
+                            <label for="soundToggle">Sound</label>
+                            <div class="toggle-switch active" id="soundToggle"></div>
+                        </div>
+                    </div>
+
+                    <!-- Voice Toggle -->
+                    <div class="setting-group">
+                        <div class="toggle-option">
+                            <label for="voiceToggle">Sprachausgabe</label>
+                            <div class="toggle-switch active" id="voiceToggle"></div>
+                        </div>
+                    </div>
+
+                    <div class="separator"></div>
+
+                    <!-- Sensitivity/Threshold -->
+                    <div class="setting-group">
+                        <div class="setting-label">
+                            <span>Empfindlichkeit</span>
+                            <span class="setting-value" id="thresholdDisplay">0.25 g</span>
+                        </div>
+                        <input type="range" id="thresholdSlider" min="0.1" max="1.0" step="0.05" value="0.25" class="range-input">
+                        <div class="setting-label" style="font-weight: 400; color: #94a3b8; margin-top: 4px;">
+                            <span>Mindestdauer: 30 ms</span>
+                        </div>
+                    </div>
+
+                    <div class="separator"></div>
+
+                    <!-- Sensor Test -->
+                    <div class="setting-group">
+                        <button class="sensor-test-btn" id="sensorTestBtn">Sensor testen</button>
+                        <div class="sensor-bar-container" id="sensorBarContainer" style="display: none;">
+                            <div class="sensor-bar-label">
+                                <span>Echtzeit-Beschleunigung</span>
+                                <span id="sensorValue">0.00 g</span>
+                            </div>
+                            <div class="sensor-bar">
+                                <div class="sensor-bar-fill" id="sensorBarFill"></div>
+                                <div class="sensor-bar-threshold" id="sensorThresholdLine"></div>
+                            </div>
+                            <div class="sensor-test-info" id="sensorTestInfo">Schüttel dein Handy, um die Empfindlichkeit einzustellen</div>
+                        </div>
+                        <div class="fallback-message" id="fallbackMessage">
+                            Sensorenzugriff nicht verfügbar. Fallback: Tippe zum Stoppen der Zeit.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== APP STATE =====
+        const state = {
+            isRunning: false,
+            isTesting: false,
+            permissionGranted: null,
+            sensorAvailable: false,
+            timerStartTime: null,
+            reactionTime: null,
+            history: [],
+            settings: {
+                minDelay: 1.0,
+                maxDelay: 3.0,
+                prepTime: 10.0,
+                threshold: 0.25,
+                soundEnabled: true,
+                voiceEnabled: true,
+                minDurationMs: 30
+            },
+            motionListener: null,
+            currentAcceleration: 0
+        };
+
+        // Load settings from localStorage
+        function loadSettings() {
+            const saved = localStorage.getItem('starterSettings');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    state.settings = { ...state.settings, ...parsed };
+                } catch (e) {
+                    console.error('Failed to load settings:', e);
+                }
+            }
+
+            const savedHistory = localStorage.getItem('starterHistory');
+            if (savedHistory) {
+                try {
+                    state.history = JSON.parse(savedHistory);
+                } catch (e) {
+                    console.error('Failed to load history:', e);
+                }
+            }
+
+            updateSettingsUI();
+            updateHistoryDisplay();
+        }
+
+        function saveSettings() {
+            localStorage.setItem('starterSettings', JSON.stringify(state.settings));
+        }
+
+        function saveHistory() {
+            localStorage.setItem('starterHistory', JSON.stringify(state.history));
+        }
+
+        // ===== UI ELEMENTS =====
+        const statusText = document.getElementById('statusText');
+        const mainBtn = document.getElementById('mainBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const resultArea = document.getElementById('resultArea');
+        const resultTime = document.getElementById('resultTime');
+        const settingsToggle = document.getElementById('settingsToggle');
+        const settingsPanel = document.getElementById('settingsPanel');
+        const minDelayInput = document.getElementById('minDelayInput');
+        const maxDelayInput = document.getElementById('maxDelayInput');
+        const prepTimeSlider = document.getElementById('prepTimeSlider');
+        const thresholdSlider = document.getElementById('thresholdSlider');
+        const soundToggle = document.getElementById('soundToggle');
+        const voiceToggle = document.getElementById('voiceToggle');
+        const sensorTestBtn = document.getElementById('sensorTestBtn');
+        const sensorBarContainer = document.getElementById('sensorBarContainer');
+        const sensorBarFill = document.getElementById('sensorBarFill');
+        const sensorThresholdLine = document.getElementById('sensorThresholdLine');
+        const sensorValue = document.getElementById('sensorValue');
+        const historyList = document.getElementById('historyList');
+        const resetHistoryBtn = document.getElementById('resetHistoryBtn');
+        const permissionBanner = document.getElementById('permissionBanner');
+        const permissionBtn = document.getElementById('permissionBtn');
+        const fallbackMessage = document.getElementById('fallbackMessage');
+
+        // ===== AUDIO SETUP =====
+        let audioContext = null;
+        let startgunBuffer = null;
+
+        async function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)({
+                    latencyHint: 'interactive'
+                });
+            }
+
+            if (!startgunBuffer) {
+                startgunBuffer = createStartgunSound();
+            }
+        }
+
+        function createStartgunSound() {
+            const sampleRate = audioContext.sampleRate;
+            const duration = 0.15; // 150ms
+            const buffer = audioContext.createBuffer(1, sampleRate * duration, sampleRate);
+            const data = buffer.getChannelData(0);
+
+            // Simulate a gunshot: white noise with envelope
+            for (let i = 0; i < buffer.length; i++) {
+                const t = i / sampleRate;
+                // Amplitude envelope: exponential decay
+                const envelope = Math.exp(-t * 15);
+                // White noise
+                const noise = Math.random() * 2 - 1;
+                // Add click at start
+                const click = i < sampleRate * 0.005 ? Math.sin((i / 10) * Math.PI) : 0;
+                data[i] = (noise * 0.7 + click * 0.3) * envelope * 0.8;
+            }
+
+            return buffer;
+        }
+
+        function playStartgunSound() {
+            if (!state.settings.soundEnabled || !audioContext) return;
+
+            initAudio().then(() => {
+                const source = audioContext.createBufferSource();
+                source.buffer = startgunBuffer;
+                source.connect(audioContext.destination);
+                const now = audioContext.currentTime;
+                source.start(now);
+
+                // Haptic feedback
+                if (navigator.vibrate) {
+                    navigator.vibrate(50);
+                }
+            });
+        }
+
+        // ===== TEXT-TO-SPEECH =====
+        function speak(text) {
+            if (!state.settings.voiceEnabled) return;
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'de-DE';
+            utterance.rate = 1.0;
+            utterance.volume = 1.0;
+
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // ===== SETTINGS UI =====
+        function updateSettingsUI() {
+            minDelayInput.value = state.settings.minDelay.toFixed(1);
+            maxDelayInput.value = state.settings.maxDelay.toFixed(1);
+            prepTimeSlider.value = state.settings.prepTime.toFixed(1);
+            thresholdSlider.value = state.settings.threshold.toFixed(2);
+
+            updateDelayRangeDisplay();
+            updatePrepTimeDisplay();
+            updateThresholdDisplay();
+
+            soundToggle.classList.toggle('active', state.settings.soundEnabled);
+            voiceToggle.classList.toggle('active', state.settings.voiceEnabled);
+        }
+
+        function updateDelayRangeDisplay() {
+            const min = Math.min(state.settings.minDelay, state.settings.maxDelay);
+            const max = Math.max(state.settings.minDelay, state.settings.maxDelay);
+            document.getElementById('delayRangeDisplay').textContent = 
+                `${min.toFixed(1)} - ${max.toFixed(1)} s`;
+        }
+
+        function updatePrepTimeDisplay() {
+            document.getElementById('prepTimeDisplay').textContent = 
+                `${state.settings.prepTime.toFixed(1)} s`;
+
+            const percentage = (state.settings.prepTime / 30) * 100;
+            prepTimeSlider.style.setProperty('--range-percentage', `${percentage}%`);
+        }
+
+        function updateThresholdDisplay() {
+            document.getElementById('thresholdDisplay').textContent = 
+                `${state.settings.threshold.toFixed(2)} g`;
+
+            const percentage = (state.settings.threshold / 1.0) * 100;
+            thresholdSlider.style.setProperty('--range-percentage', `${percentage}%`);
+        }
+
+        // Settings event listeners
+        settingsToggle.addEventListener('click', () => {
+            settingsPanel.classList.toggle('open');
+            settingsToggle.classList.toggle('open');
+            document.getElementById('toggleArrow').textContent = 
+                settingsPanel.classList.contains('open') ? '▲' : '▼';
+        });
+
+        minDelayInput.addEventListener('change', () => {
+            let val = parseFloat(minDelayInput.value);
+            val = Math.max(0.1, Math.min(10, val));
+            state.settings.minDelay = val;
+
+            if (state.settings.minDelay > state.settings.maxDelay) {
+                state.settings.maxDelay = state.settings.minDelay;
+                maxDelayInput.value = state.settings.maxDelay.toFixed(1);
+            }
+
+            updateDelayRangeDisplay();
+            saveSettings();
+        });
+
+        maxDelayInput.addEventListener('change', () => {
+            let val = parseFloat(maxDelayInput.value);
+            val = Math.max(0.1, Math.min(10, val));
+            state.settings.maxDelay = val;
+
+            if (state.settings.maxDelay < state.settings.minDelay) {
+                state.settings.minDelay = state.settings.maxDelay;
+                minDelayInput.value = state.settings.minDelay.toFixed(1);
+            }
+
+            updateDelayRangeDisplay();
+            saveSettings();
+        });
+
+        prepTimeSlider.addEventListener('input', () => {
+            state.settings.prepTime = parseFloat(prepTimeSlider.value);
+            updatePrepTimeDisplay();
+        });
+
+        prepTimeSlider.addEventListener('change', () => {
+            saveSettings();
+        });
+
+        thresholdSlider.addEventListener('input', () => {
+            state.settings.threshold = parseFloat(thresholdSlider.value);
+            updateThresholdDisplay();
+            updateSensorThresholdLine();
+        });
+
+        thresholdSlider.addEventListener('change', () => {
+            saveSettings();
+        });
+
+        soundToggle.addEventListener('click', () => {
+            state.settings.soundEnabled = !state.settings.soundEnabled;
+            soundToggle.classList.toggle('active');
+            saveSettings();
+        });
+
+        voiceToggle.addEventListener('click', () => {
+            state.settings.voiceEnabled = !state.settings.voiceEnabled;
+            voiceToggle.classList.toggle('active');
+            saveSettings();
+        });
+
+        // ===== SENSOR DETECTION =====
+        function updateSensorThresholdLine() {
+            const thresholdPercentage = (state.settings.threshold / 1.0) * 100;
+            sensorThresholdLine.style.left = `${thresholdPercentage}%`;
+        }
+
+        function enableMotionListener() {
+            if (state.motionListener) {
+                window.removeEventListener('devicemotion', state.motionListener);
+            }
+
+            state.motionListener = (event) => {
+                const acc = event.accelerationIncludingGravity;
+                if (!acc) return;
+
+                // Calculate magnitude of acceleration
+                const magnitude = Math.sqrt(acc.x * acc.x + acc.y * acc.y + acc.z * acc.z);
+                // Normalize to g (1 g ≈ 9.81 m/s²)
+                const gValue = magnitude / 9.81;
+
+                state.currentAcceleration = gValue;
+
+                // Update sensor bar if testing
+                if (state.isTesting) {
+                    updateSensorBar(gValue);
+                }
+
+                // Check for motion if running (not testing)
+                if (state.isRunning && state.timerStartTime !== null) {
+                    checkMotionDetection(gValue);
+                }
+            };
+
+            window.addEventListener('devicemotion', state.motionListener, true);
+        }
+
+        function disableMotionListener() {
+            if (state.motionListener) {
+                window.removeEventListener('devicemotion', state.motionListener);
+                state.motionListener = null;
+            }
+        }
+
+        function checkMotionDetection(gValue) {
+            if (gValue < state.settings.threshold) return;
+
+            // Motion detected above threshold
+            stopReactionTimer();
+        }
+
+        function updateSensorBar(gValue) {
+            const percentage = Math.min((gValue / 1.0) * 100, 100);
+            sensorBarFill.style.width = `${percentage}%`;
+            sensorValue.textContent = `${gValue.toFixed(2)} g`;
+
+            // Color feedback
+            if (gValue >= state.settings.threshold) {
+                sensorBarFill.style.opacity = '0.7';
+            } else {
+                sensorBarFill.style.opacity = '0.4';
+            }
+        }
+
+        sensorTestBtn.addEventListener('click', async () => {
+            if (state.isTesting) {
+                // Stop testing
+                state.isTesting = false;
+                sensorTestBtn.textContent = 'Sensor testen';
+                sensorBarContainer.style.display = 'none';
+                disableMotionListener();
+            } else {
+                // Start testing
+                await requestSensorPermission();
+                if (state.sensorAvailable) {
+                    state.isTesting = true;
+                    sensorTestBtn.textContent = 'Test beenden';
+                    sensorBarContainer.style.display = 'block';
+                    updateSensorThresholdLine();
+                    enableMotionListener();
+                }
+            }
+        });
+
+        // ===== PERMISSIONS =====
+        async function requestSensorPermission() {
+            if (typeof DeviceMotionEvent !== 'undefined' && 
+                typeof DeviceMotionEvent.requestPermission === 'function') {
+                try {
+                    const permission = await DeviceMotionEvent.requestPermission();
+                    if (permission === 'granted') {
+                        state.permissionGranted = true;
+                        state.sensorAvailable = true;
+                        permissionBanner.classList.remove('visible');
+                        fallbackMessage.classList.remove('visible');
+                        enableMotionListener();
+                        return true;
+                    } else {
+                        state.permissionGranted = false;
+                        state.sensorAvailable = false;
+                        permissionBanner.classList.add('visible');
+                        fallbackMessage.classList.add('visible');
+                        return false;
+                    }
+                } catch (err) {
+                    console.error('Permission request failed:', err);
+                    state.sensorAvailable = false;
+                    fallbackMessage.classList.add('visible');
+                    return false;
+                }
+            } else {
+                // Non-iOS or already granted
+                state.sensorAvailable = true;
+                state.permissionGranted = true;
+                permissionBanner.classList.remove('visible');
+                enableMotionListener();
+                return true;
+            }
+        }
+
+        permissionBtn.addEventListener('click', async () => {
+            await requestSensorPermission();
+        });
+
+        // Check sensor availability on load
+        function checkSensorAvailability() {
+            if (typeof DeviceMotionEvent !== 'undefined') {
+                if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                    // iOS 13+: permission required
+                    permissionBanner.classList.add('visible');
+                } else {
+                    // Other devices: permission not required
+                    state.sensorAvailable = true;
+                    state.permissionGranted = true;
+                    enableMotionListener();
+                    permissionBanner.classList.remove('visible');
+                }
+            } else {
+                // No sensor support
+                state.sensorAvailable = false;
+                fallbackMessage.classList.add('visible');
+            }
+        }
+
+        // ===== MAIN LOGIC =====
+        async function startSequence() {
+            if (state.isRunning) return;
+
+            state.isRunning = true;
+            resultArea.classList.remove('visible');
+            mainBtn.style.display = 'none';
+            cancelBtn.style.display = 'inline-block';
+            settingsToggle.disabled = true;
+
+            await initAudio();
+
+            try {
+                // 1. Preparation time
+                statusText.textContent = 'Auf die Plätze';
+                statusText.classList.add('accent');
+                speak('Auf die Plätze');
+
+                await sleep(state.settings.prepTime * 1000);
+
+                if (!state.isRunning) return; // Cancelled
+
+                // 2. Set
+                statusText.textContent = 'Fertig';
+                speak('Fertig');
+
+                await sleep(1000);
+
+                if (!state.isRunning) return; // Cancelled
+
+                // 3. Random delay
+                const randomDelay = state.settings.minDelay + 
+                    Math.random() * (state.settings.maxDelay - state.settings.minDelay);
+
+                await sleep(randomDelay * 1000);
+
+                if (!state.isRunning) return; // Cancelled
+
+                // 4. Start shot
+                statusText.textContent = 'LOS!';
+                speak('Los');
+
+                // Record exact start time and play sound
+                state.timerStartTime = performance.now();
+                playStartgunSound();
+
+                // Enable motion detection
+                enableMotionListener();
+
+                // Fallback: allow manual tap after 5 seconds
+                setTimeout(() => {
+                    if (state.isRunning && state.timerStartTime !== null) {
+                        // Allow tap to stop timer
+                        mainBtn.textContent = 'Zeit stoppen';
+                        mainBtn.style.display = 'inline-block';
+                    }
+                }, 5000);
+
+            } catch (err) {
+                console.error('Sequence error:', err);
+                resetState();
+            }
+        }
+
+        function stopReactionTimer() {
+            if (!state.isRunning || state.timerStartTime === null) return;
+
+            const endTime = performance.now();
+            state.reactionTime = Math.round(endTime - state.timerStartTime);
+
+            disableMotionListener();
+            showResult();
+            resetState();
+        }
+
+        function showResult() {
+            state.isRunning = false;
+            statusText.textContent = 'Reaktionszeit';
+            statusText.classList.remove('accent');
+            resultTime.textContent = `${state.reactionTime} ms`;
+
+            // Add to history
+            state.history.unshift(state.reactionTime);
+            if (state.history.length > 10) {
+                state.history.pop();
+            }
+            saveHistory();
+
+            // Update UI
+            resultArea.classList.add('visible');
+            mainBtn.textContent = 'Nochmal';
+            mainBtn.style.display = 'inline-block';
+            cancelBtn.style.display = 'none';
+            settingsToggle.disabled = false;
+
+            updateHistoryDisplay();
+        }
+
+        function updateHistoryDisplay() {
+            historyList.innerHTML = '';
+
+            state.history.forEach((time, index) => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+
+                // Highlight PB
+                if (index === 0 && state.history.length > 0) {
+                    const isPB = time === Math.min(...state.history);
+                    if (isPB && index > 0) {
+                        item.classList.add('pb');
+                    }
+                }
+
+                item.textContent = `${time} ms`;
+                historyList.appendChild(item);
+            });
+        }
+
+        function cancelSequence() {
+            state.isRunning = false;
+            state.timerStartTime = null;
+            disableMotionListener();
+            resetState();
+            statusText.textContent = 'Bereit';
+            statusText.classList.remove('accent');
+            resultArea.classList.remove('visible');
+        }
+
+        function resetState() {
+            state.isRunning = false;
+            state.isTesting = false;
+            state.timerStartTime = null;
+            mainBtn.textContent = 'Start';
+            mainBtn.style.display = 'inline-block';
+            cancelBtn.style.display = 'none';
+            settingsToggle.disabled = false;
+
+            if (sensorTestBtn.textContent === 'Test beenden') {
+                sensorTestBtn.click();
+            }
+        }
+
+        resetHistoryBtn.addEventListener('click', () => {
+            if (confirm('Möchtest du deine gesamte Historie wirklich löschen?')) {
+                state.history = [];
+                saveHistory();
+                updateHistoryDisplay();
+            }
+        });
+
+        // Main button logic
+        mainBtn.addEventListener('click', async () => {
+            if (!state.isRunning) {
+                await startSequence();
+            } else if (mainBtn.textContent === 'Zeit stoppen') {
+                // Manual fallback tap
+                stopReactionTimer();
+            }
+        });
+
+        cancelBtn.addEventListener('click', () => {
+            cancelSequence();
+        });
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // ===== INITIALIZATION =====
+        window.addEventListener('load', () => {
+            loadSettings();
+            checkSensorAvailability();
+
+            // Request sensor permission on first interaction if iOS
+            if (typeof DeviceMotionEvent !== 'undefined' && 
+                typeof DeviceMotionEvent.requestPermission === 'function') {
+                // iOS 13+: require user interaction
+            }
+
+            // PWA install prompt
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('data:application/javascript,self.addEventListener("install",e=>e.waitUntil(caches.open("v1").then(c=>c.addAll(["/"]))))').catch(e => console.log('SW registration skipped'));
+            }
+        });
+
+        // Prevent accidental navigation
+        window.addEventListener('beforeunload', (e) => {
+            if (state.isRunning) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
+
+        // Handle page visibility
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && state.isRunning) {
+                cancelSequence();
+            }
+        });
+    </script>
+</body>
+</html>

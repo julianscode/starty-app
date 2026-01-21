@@ -135,6 +135,12 @@
             font-variant-numeric: tabular-nums;
         }
 
+        .result-assessment {
+            font-size: 18px;
+            font-weight: 600;
+            color: #f8fafc;
+        }
+
         .result-label {
             font-size: 16px;
             color: #cbd5e1;
@@ -562,7 +568,8 @@
             <!-- Result Display -->
             <div class="result-area" id="resultArea">
                 <div class="result-label">Reaktionszeit</div>
-                <div class="result-time" id="resultTime">0 ms</div>
+                <div class="result-time" id="resultTime">0,000 s</div>
+                <div class="result-assessment" id="resultAssessment"></div>
                 <div class="history-container">
                     <div class="history-title">Letzte Versuche</div>
                     <div class="history-list" id="historyList"></div>
@@ -636,11 +643,11 @@
                     <div class="setting-group">
                         <div class="setting-label">
                             <span>Empfindlichkeit</span>
-                            <span class="setting-value" id="thresholdDisplay">0.25 g</span>
+                            <span class="setting-value" id="thresholdDisplay">0.35 g</span>
                         </div>
-                        <input type="range" id="thresholdSlider" min="0.1" max="1.0" step="0.05" value="0.25" class="range-input">
+                        <input type="range" id="thresholdSlider" min="0.2" max="1.0" step="0.05" value="0.35" class="range-input">
                         <div class="setting-label" style="font-weight: 400; color: #94a3b8; margin-top: 4px;">
-                            <span>Mindestdauer: 30 ms</span>
+                            <span>Mindestdauer: 80 ms</span>
                         </div>
                     </div>
 
@@ -683,13 +690,14 @@
                 minDelay: 1.0,
                 maxDelay: 3.0,
                 prepTime: 10.0,
-                threshold: 0.25,
+                threshold: 0.35,
                 soundEnabled: true,
                 voiceEnabled: true,
-                minDurationMs: 30
+                minDurationMs: 80
             },
             motionListener: null,
-            currentAcceleration: 0
+            currentAcceleration: 0,
+            motionAboveThresholdStart: null
         };
 
         // Load settings from localStorage
@@ -731,6 +739,7 @@
         const cancelBtn = document.getElementById('cancelBtn');
         const resultArea = document.getElementById('resultArea');
         const resultTime = document.getElementById('resultTime');
+        const resultAssessment = document.getElementById('resultAssessment');
         const settingsToggle = document.getElementById('settingsToggle');
         const settingsPanel = document.getElementById('settingsPanel');
         const minDelayInput = document.getElementById('minDelayInput');
@@ -788,9 +797,8 @@
         }
 
         function playStartgunSound() {
-            if (!state.settings.soundEnabled || !audioContext) return;
-
-            initAudio().then(() => {
+            const perfStart = performance.now();
+            if (state.settings.soundEnabled && audioContext) {
                 const source = audioContext.createBufferSource();
                 source.buffer = startgunBuffer;
                 source.connect(audioContext.destination);
@@ -801,7 +809,9 @@
                 if (navigator.vibrate) {
                     navigator.vibrate(50);
                 }
-            });
+            }
+
+            return perfStart;
         }
 
         // ===== TEXT-TO-SPEECH =====
@@ -966,10 +976,21 @@
         }
 
         function checkMotionDetection(gValue) {
-            if (gValue < state.settings.threshold) return;
+            if (gValue < state.settings.threshold) {
+                state.motionAboveThresholdStart = null;
+                return;
+            }
 
-            // Motion detected above threshold
-            stopReactionTimer();
+            if (state.motionAboveThresholdStart === null) {
+                state.motionAboveThresholdStart = performance.now();
+                return;
+            }
+
+            const duration = performance.now() - state.motionAboveThresholdStart;
+            if (duration >= state.settings.minDurationMs) {
+                // Motion detected above threshold for long enough
+                stopReactionTimer();
+            }
         }
 
         function updateSensorBar(gValue) {
@@ -1105,11 +1126,10 @@
 
                 // 4. Start shot
                 statusText.textContent = 'LOS!';
-                speak('Los');
+                speak('Peng');
 
                 // Record exact start time and play sound
-                state.timerStartTime = performance.now();
-                playStartgunSound();
+                state.timerStartTime = playStartgunSound();
 
                 // Enable motion detection
                 enableMotionListener();
@@ -1144,7 +1164,9 @@
             state.isRunning = false;
             statusText.textContent = 'Reaktionszeit';
             statusText.classList.remove('accent');
-            resultTime.textContent = `${state.reactionTime} ms`;
+            const seconds = state.reactionTime / 1000;
+            resultTime.textContent = formatSeconds(seconds);
+            resultAssessment.textContent = getReactionRating(seconds);
 
             // Add to history
             state.history.unshift(state.reactionTime);
@@ -1178,7 +1200,8 @@
                     }
                 }
 
-                item.textContent = `${time} ms`;
+                const seconds = time / 1000;
+                item.textContent = `${formatSeconds(seconds)} (${getReactionRating(seconds)})`;
                 historyList.appendChild(item);
             });
         }
@@ -1197,6 +1220,7 @@
             state.isRunning = false;
             state.isTesting = false;
             state.timerStartTime = null;
+            state.motionAboveThresholdStart = null;
             mainBtn.textContent = 'Start';
             mainBtn.style.display = 'inline-block';
             cancelBtn.style.display = 'none';
@@ -1231,6 +1255,18 @@
 
         function sleep(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function formatSeconds(seconds) {
+            return `${seconds.toFixed(3).replace('.', ',')} s`;
+        }
+
+        function getReactionRating(seconds) {
+            if (seconds < 0.1) return 'Frühstart';
+            if (seconds < 0.15) return 'sehr gut';
+            if (seconds < 0.2) return 'gut';
+            if (seconds < 0.25) return 'mittel';
+            return 'schlecht';
         }
 
         // ===== INITIALIZATION =====

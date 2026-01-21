@@ -781,9 +781,9 @@
                     <div class="setting-group">
                         <div class="setting-label">
                             <span>Empfindlichkeit</span>
-                            <span class="setting-value" id="thresholdDisplay">0.35 g</span>
+                            <span class="setting-value" id="thresholdDisplay">0.05 g</span>
                         </div>
-                        <input type="range" id="thresholdSlider" min="0.2" max="2.0" step="0.05" value="0.35" class="range-input">
+                        <input type="range" id="thresholdSlider" min="0.01" max="0.1" step="0.01" value="0.05" class="range-input">
                         <div class="setting-label" style="font-weight: 400; color: #94a3b8; margin-top: 4px;">
                             <span>Mindestdauer: 80 ms</span>
                         </div>
@@ -854,7 +854,7 @@
 
     <script>
         // ===== APP STATE =====
-        const MAX_G_DISPLAY = 2.0;
+        const MAX_G_DISPLAY = 0.1;
         const state = {
             isRunning: false,
             isTesting: false,
@@ -867,7 +867,7 @@
                 minDelay: 1.0,
                 maxDelay: 3.0,
                 prepTime: 10.0,
-                threshold: 0.35,
+                threshold: 0.05,
                 soundEnabled: true,
                 voiceEnabled: true,
                 minDurationMs: 80
@@ -953,6 +953,10 @@
                 });
             }
 
+            if (audioContext.state === 'suspended') {
+                await audioContext.resume();
+            }
+
             if (!startgunBuffer) {
                 startgunBuffer = await loadStartgunSound();
             }
@@ -969,7 +973,10 @@
             if (state.settings.soundEnabled && audioContext) {
                 const source = audioContext.createBufferSource();
                 source.buffer = startgunBuffer;
-                source.connect(audioContext.destination);
+                const gainNode = audioContext.createGain();
+                gainNode.gain.value = 1.6;
+                source.connect(gainNode);
+                gainNode.connect(audioContext.destination);
                 const now = audioContext.currentTime;
                 source.start(now);
 
@@ -1077,6 +1084,24 @@
             saveSettings();
         });
 
+        minDelaySlider.addEventListener('input', () => {
+            const val = parseFloat(minDelaySlider.value);
+            state.settings.minDelay = val;
+            minDelayInput.value = val.toFixed(1);
+
+            if (state.settings.minDelay > state.settings.maxDelay) {
+                state.settings.maxDelay = state.settings.minDelay;
+                maxDelayInput.value = state.settings.maxDelay.toFixed(1);
+                maxDelaySlider.value = state.settings.maxDelay.toFixed(1);
+            }
+
+            updateDelayRangeDisplay();
+        });
+
+        minDelaySlider.addEventListener('change', () => {
+            saveSettings();
+        });
+
         maxDelayInput.addEventListener('change', () => {
             let val = parseFloat(maxDelayInput.value);
             val = Math.max(0.1, Math.min(10, val));
@@ -1090,6 +1115,24 @@
             }
 
             updateDelayRangeDisplay();
+            saveSettings();
+        });
+
+        maxDelaySlider.addEventListener('input', () => {
+            const val = parseFloat(maxDelaySlider.value);
+            state.settings.maxDelay = val;
+            maxDelayInput.value = val.toFixed(1);
+
+            if (state.settings.maxDelay < state.settings.minDelay) {
+                state.settings.minDelay = state.settings.maxDelay;
+                minDelayInput.value = state.settings.minDelay.toFixed(1);
+                minDelaySlider.value = state.settings.minDelay.toFixed(1);
+            }
+
+            updateDelayRangeDisplay();
+        });
+
+        maxDelaySlider.addEventListener('change', () => {
             saveSettings();
         });
 

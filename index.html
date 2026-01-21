@@ -1084,6 +1084,24 @@
             saveSettings();
         });
 
+        minDelaySlider.addEventListener('input', () => {
+            const val = parseFloat(minDelaySlider.value);
+            state.settings.minDelay = val;
+            minDelayInput.value = val.toFixed(1);
+
+            if (state.settings.minDelay > state.settings.maxDelay) {
+                state.settings.maxDelay = state.settings.minDelay;
+                maxDelayInput.value = state.settings.maxDelay.toFixed(1);
+                maxDelaySlider.value = state.settings.maxDelay.toFixed(1);
+            }
+
+            updateDelayRangeDisplay();
+        });
+
+        minDelaySlider.addEventListener('change', () => {
+            saveSettings();
+        });
+
         maxDelayInput.addEventListener('change', () => {
             let val = parseFloat(maxDelayInput.value);
             val = Math.max(0.1, Math.min(10, val));
@@ -1097,6 +1115,24 @@
             }
 
             updateDelayRangeDisplay();
+            saveSettings();
+        });
+
+        maxDelaySlider.addEventListener('input', () => {
+            const val = parseFloat(maxDelaySlider.value);
+            state.settings.maxDelay = val;
+            maxDelayInput.value = val.toFixed(1);
+
+            if (state.settings.maxDelay < state.settings.minDelay) {
+                state.settings.minDelay = state.settings.maxDelay;
+                minDelayInput.value = state.settings.minDelay.toFixed(1);
+                minDelaySlider.value = state.settings.minDelay.toFixed(1);
+            }
+
+            updateDelayRangeDisplay();
+        });
+
+        maxDelaySlider.addEventListener('change', () => {
             saveSettings();
         });
 
